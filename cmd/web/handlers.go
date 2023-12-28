@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -12,7 +14,30 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Hello from Snippetbox"))
+	// Gather templates into a string slice.
+	// Note that the filepath used is relative to the root of the project.
+	// This means that you need to run the server from the root directory.
+	files := []string{
+		// base template must come first
+		"./ui/html/base.tmpl", "./ui/html/pages/home.tmpl", "./ui/html/partials/nav.tmpl",
+	}
+
+	// Parse the template set or return a 500 error.
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "An error occurred while parsing templates.", http.StatusInternalServerError)
+		return
+	}
+
+	// Write template content to response body. We need to specify our base
+	// template as the second argument.
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		log.Print(err.Error())
+		http.Error(w, "An error occurred while parsing templates.", http.StatusInternalServerError)
+	}
+
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
