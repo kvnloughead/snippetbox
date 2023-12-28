@@ -1,1 +1,7 @@
-To run server, `go run ./cmd/web`
+# Snippetbox
+
+A web app written in Go, following https://lets-go.alexedwards.net/.
+
+## Usage
+
+To run server locally run `go run ./cmd/web`.
