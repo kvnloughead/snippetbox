@@ -2,29 +2,35 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
 func main() {
 	addr := flag.String("addr", "4000", "HTTP Network Address")
 	flag.Parse()
 
+	// Initialize structured logger to stdout with default settings.
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true, // include file and line number
+	}))
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	// Serve files out of ./ui/static directory. The path given should be relative
-	// to the project's root.
+	// Serve static files out of ./ui/static directory.
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-
-	// Register file server as handler for all URL paths that start with /static/.
-	// Must strip the /static prefix before the request hits the file server.
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Printf("starting server on :%s", *addr)
+	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
+	logger.Info("starting server", slog.String("addr", *addr))
 
 	err := http.ListenAndServe(":"+*addr, mux)
-	log.Fatal(err)
+
+	// If http.ListenAndServe returns an error, log its message and exit.
+	logger.Error(err.Error())
+	os.Exit(1)
 }
