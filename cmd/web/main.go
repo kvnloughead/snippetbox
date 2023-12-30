@@ -1,11 +1,15 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 )
 
 func main() {
+	addr := flag.String("addr", "4000", "HTTP Network Address")
+	flag.Parse()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet/view", snippetView)
@@ -19,8 +23,8 @@ func main() {
 	// Must strip the /static prefix before the request hits the file server.
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Print("starting server on :4000")
+	log.Printf("starting server on :%s", *addr)
 
-	err := http.ListenAndServe(":4000", mux)
+	err := http.ListenAndServe(":"+*addr, mux)
 	log.Fatal(err)
 }
