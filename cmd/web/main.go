@@ -7,6 +7,11 @@ import (
 	"os"
 )
 
+// A struct containing application-wide dependencies.
+type application struct {
+	logger *slog.Logger
+}
+
 func main() {
 	addr := flag.String("addr", "4000", "HTTP Network Address")
 	flag.Parse()
@@ -16,10 +21,12 @@ func main() {
 		AddSource: true, // include file and line number
 	}))
 
+	app := &application{logger: logger}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet/view", app.snippetView)
+	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// Serve static files out of ./ui/static directory.
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
