@@ -23,18 +23,10 @@ func main() {
 
 	app := &application{logger: logger}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-
-	// Serve static files out of ./ui/static directory.
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
 	logger.Info("starting server", slog.String("addr", *addr))
 
+	mux := app.routes()
 	err := http.ListenAndServe(":"+*addr, mux)
 
 	// If http.ListenAndServe returns an error, log its message and exit.
