@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+	"runtime/debug"
+)
 
 /*
 Writes an Error level log entry, including the request method and uri, and
@@ -14,10 +18,20 @@ func (app *application) serverError(
 	var (
 		method = r.Method
 		uri    = r.URL.RequestURI()
+		trace  = debug.Stack()
 	)
 
-	app.logger.Error(err.Error(), "method", method, "uri", uri)
+	// Log error with stack trace.
+	app.logger.Error(err.Error(), "method", method, "uri", uri, "trace", trace)
+
+	// Send http error response to client.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+	// If in development, output stack trace in human readable form to stderr.
+	if os.Getenv("GO_ENV") != "production" {
+		debug.PrintStack()
+		app.logger.Error("IN DEV")
+	}
 }
 
 /*
