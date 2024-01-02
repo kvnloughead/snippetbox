@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -48,8 +49,29 @@ func (m *SnippetModel) Insert(
 }
 
 // Get a snippet by its ID.
+// If no matching snippet is found, a models.ErrNoRecord is returned.
 func (m *SnippetModel) Get(id int) (Snippet, error) {
-	return Snippet{}, nil
+	query := `SELECT id, title, content, created, expires FROM snippets
+	WHERE expires > UTC_TIMESTAMP() AND id = ?`
+
+	// Executes a query statement that will return no more than one row.
+	// Accepts the query statement and a variadic list of placeholder values.
+	row := m.DB.QueryRow(query, id)
+
+	// Declare an empty snippet and populate it from the row returned by QueryRow.
+	// If multiple rows were found, the first row is used.
+	// If no rows were found, an sql.ErrNoRows error is returned.
+	var s Snippet
+	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Snippet{}, ErrNoRecord
+		} else {
+			return Snippet{}, err
+		}
+	}
+
+	return s, nil
 }
 
 func (m *SnippetModel) Latest() ([]Snippet, error) {

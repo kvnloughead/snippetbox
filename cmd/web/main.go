@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kvnloughead/snippetbox/internals/models"
+	"github.com/kvnloughead/snippetbox/internal/models"
 
 	// Aliasing with a blank identifier because the driver isn't used explicitly.
 	_ "github.com/go-sql-driver/mysql"
