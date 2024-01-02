@@ -17,8 +17,8 @@ func (app *application) routes() *http.ServeMux {
 
 	// Routes
 	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
+	mux.HandleFunc("/snippet/view", app.viewSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	return mux
 }
