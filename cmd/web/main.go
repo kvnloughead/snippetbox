@@ -7,13 +7,16 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kvnloughead/snippetbox/internals/models"
+
 	// Aliasing with a blank identifier because the driver isn't used explicitly.
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // A struct containing application-wide dependencies.
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -26,8 +29,6 @@ func main() {
 		AddSource: true, // include file and line number
 	}))
 
-	app := &application{logger: logger}
-
 	// Initialize sql.DB connection pool for the provided DSN.
 	db, err := openDB(*dsn)
 	if err != nil {
@@ -35,6 +36,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+
+	// Initialize snippet model struct
+	snippets := &models.SnippetModel{DB: db}
+
+	app := &application{logger: logger, snippets: snippets}
 
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
 	logger.Info("starting server", slog.String("addr", *addr))
