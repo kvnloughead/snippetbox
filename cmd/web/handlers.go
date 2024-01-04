@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	// "html/template"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -69,7 +69,33 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	files := []string{
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/view.tmpl",
+	}
+
+	// Parse the template set or return a 500 error.
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := templateData{
+		Snippet: snippet,
+	}
+
+	/* Pass the the template data as final parameter to ts.ExecuteTemplate. We create a struct to contain all data necessary in the template, for now this is just the snippet.
+
+	The data will be represented by the `.` character inside the templates. The type of the dot will be the type of data that's passed to it.
+
+	You can then access data within the templates via a familiar sort of syntax. For instance `.Title` expands to the snippets title. */
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 /*
