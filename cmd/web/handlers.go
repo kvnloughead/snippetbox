@@ -22,32 +22,29 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%v\n", snippet)
+	files := []string{
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/home.tmpl",
 	}
 
-	// Gather templates into a string slice.
-	// Note that the filepath used is relative to the root of the project.
-	// This means that you need to run the server from the root directory.
-	// files := []string{
-	// 	// base template must come first
-	// 	"./ui/html/base.tmpl", "./ui/html/pages/home.tmpl", "./ui/html/partials/nav.tmpl",
-	// }
+	// Parse the template set or return a 500 error.
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 
-	// // Parse the template set or return a 500 error.
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
+	// Create templateData instance to pass the latest snippets to the template.
+	data := templateData{Snippets: snippets}
 
-	// // Write template content to response body. We need to specify our base
-	// // template as the second argument.
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
+	// Write template content to response body. We need to specify our base
+	// template as the second argument. Data can be specified as third argument.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 // View page for the snippet with the given ID.
