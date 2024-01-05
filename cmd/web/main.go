@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,13 +16,17 @@ import (
 
 // A struct containing application-wide dependencies.
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
 	addr := flag.String("addr", "4000", "HTTP Network Address")
-	dsn := flag.String("dsn", "web:devpass@/snippetbox?parseTime=true", "MySQL data source name (aka 'connection string')")
+	dsn := flag.String(
+		"dsn",
+		"web:devpass@/snippetbox?parseTime=true",
+		"MySQL data source name (aka 'connection string')")
 	flag.Parse()
 
 	// Initialize structured logger to stdout with default settings.
@@ -37,10 +42,19 @@ func main() {
 	}
 	defer db.Close()
 
-	// Initialize snippet model struct
+	// Initialize template cache and snippet modeland add to app struct.
 	snippets := &models.SnippetModel{DB: db}
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
-	app := &application{logger: logger, snippets: snippets}
+	app := &application{
+		logger:        logger,
+		snippets:      snippets,
+		templateCache: templateCache,
+	}
 
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
 	logger.Info("starting server", slog.String("addr", *addr))
