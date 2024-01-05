@@ -1,15 +1,18 @@
 {{define "title"}}Snippet #{{.Snippet.ID}}{{ end }}
 
 {{define "main"}}
+<!-- prettier-ignore -->
+{{with .Snippet}}
 <article class="snippet">
   <div class="metadata">
-    <h2>{{.Snippet.Title}}</h2>
-    <span>#{{.Snippet.ID}}</span>
+    <h2>{{.Title}}</h2>
+    <span>#{{.ID}}</span>
   </div>
-  <pre><code>{{.Snippet.Content}}</code></pre>
+  <pre><code>{{.Content}}</code></pre>
   <footer class="metadata">
-    <time>Created: {{.Snippet.Created}}</time>
-    <time>Expires: {{.Snippet.Expires}}</time>
+    <time>Created: {{.Created}}</time>
+    <time>Expires: {{.Expires}}</time>
   </footer>
 </article>
+{{ end }}
 {{ end }}
