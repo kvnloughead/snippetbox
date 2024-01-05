@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"runtime/debug"
@@ -48,4 +49,23 @@ func (app *application) clientError(
 // A wrapper around clientError to easily send 404 Not Found responses.
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+// Retrieves appropriate template from the cache, based on the page string.
+// If no entry exists in the cache, a 500 server error is returned.
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+	tmpl, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(status) // write status provide to the response headers
+
+	err := tmpl.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
