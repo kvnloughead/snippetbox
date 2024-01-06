@@ -3,9 +3,20 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 
 	"github.com/kvnloughead/snippetbox/internal/models"
 )
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+// template.FuncMap struct provides a string keyed map of template functions.
+// Must be registered with the template before calling ParseFiles.
+var functions = template.FuncMap{
+	"humanDate": humanDate,
+}
 
 // Go templates only allow a single data argument, so we create a struct to
 // store all necessary template data.
@@ -29,8 +40,11 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		// Parse base into a template set.
-		ts, err := template.ParseFiles("./ui/html/base.tmpl")
+		// Before parsing base into a template set we call New() and Funcs() to
+		// register the template functions.
+		ts, err := template.New(name).Funcs(functions).ParseFiles(
+			"./ui/html/base.tmpl",
+		)
 		if err != nil {
 			return nil, err
 		}
