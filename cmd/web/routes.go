@@ -8,7 +8,7 @@ Returns a servemux that serves files from ./ui/static and contains the following
   - GET  /snippet/view
   - POST /snippet/create
 */
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Serve static files out of ./ui/static directory.
@@ -20,5 +20,5 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.viewSnippet)
 	mux.HandleFunc("/snippet/create", app.createSnippet)
 
-	return mux
+	return secureHeaders(mux)
 }
