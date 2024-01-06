@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/justinas/alice"
+)
 
 /*
 Returns a servemux that serves files from ./ui/static and contains the following routes:
@@ -20,5 +24,8 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/snippet/view", app.viewSnippet)
 	mux.HandleFunc("/snippet/create", app.createSnippet)
 
-	return app.recoverPanic(app.logRequest(secureHeaders(mux)))
+	// Initialize standard set of pre-request middlewares.
+	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
+	return standard.Then(mux)
 }
