@@ -10,8 +10,9 @@ import (
 // Go templates only allow a single data argument, so we create a struct to
 // store all necessary template data.
 type templateData struct {
-	Snippet  models.Snippet
-	Snippets []models.Snippet
+	CurrentYear int
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

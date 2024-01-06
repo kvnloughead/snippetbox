@@ -1,3 +1,4 @@
+// Application helper methods.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"time"
 )
 
 /*
@@ -75,4 +77,11 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	// response to the client.
 	w.WriteHeader(status)
 	buf.WriteTo(w) // write contents of buffer to http.ResponseWriter
+}
+
+// Initialize templateData struct with the CurrentYear.
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }

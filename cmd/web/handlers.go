@@ -21,9 +21,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "home.tmpl", templateData{
-		Snippets: snippets,
-	})
+	templateData := app.newTemplateData(r)
+	templateData.Snippets = snippets
+
+	app.render(w, r, http.StatusOK, "home.tmpl", templateData)
 }
 
 // View page for the snippet with the given ID.
@@ -45,9 +46,10 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "view.tmpl", templateData{
-		Snippet: snippet,
-	})
+	templateData := app.newTemplateData(r)
+	templateData.Snippet = snippet
+
+	app.render(w, r, http.StatusOK, "view.tmpl", templateData)
 }
 
 /*
