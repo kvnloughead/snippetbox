@@ -25,6 +25,11 @@ footer {
   padding: 2px calc((100% - 800px) / 2) 0;
 }
 
+fieldset {
+  padding: 0;
+  border: none;
+}
+
 main {
   margin-top: 54px;
   margin-bottom: 54px;
@@ -397,4 +402,13 @@ footer {
   height: 60px;
   color: #6a6c6f;
   text-align: center;
+}
+
+.create-snippet-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.radio-buttons {
+  display: flex;
 }
