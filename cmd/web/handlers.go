@@ -55,7 +55,8 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the form for creating a new snippet..."))
+	templateData := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "create.tmpl", templateData)
 }
 
 /*
@@ -65,10 +66,25 @@ the corresponding page with a 303 status code.
 If we were using http.ServeMux, we would have to check the method in this handler.
 */
 func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request) {
-	// Temporary dummy data.
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n- Kobayashi Issa"
-	expires := 7
+
+	// r.ParseForm() populates r.Form and r.PostForm and validates response body.
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// Get the values from the form, converting 'expires' to an 'int'.
+	// PostForm.Get() returns only the first value for a given input, (by name).
+	// To access all values (for instance, of several checkboxes), you can access
+	// the underlying r.PostForm map, which has type map[string][]string.
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	// Insert new record or respond with a server error.
 	id, err := app.snippets.Insert(title, content, expires)
