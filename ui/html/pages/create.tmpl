@@ -2,22 +2,65 @@
 
 {{ define "main" }}
   <form class="create-snippet-form" action="/snippet/create" method="POST">
-    <label for="title-input"
-      >Title: <input id="title-input" name="title" type="text"
-    /></label>
-    <label for="content-input"
-      >Text: <textarea id="content-input" name="content"></textarea>
+    <label for="title-input">
+      Title:
+      <!-- If Form.FieldErrors.title is non-empty, it's value will be assigned to dot (.) and the error span will be rendered. -->
+      {{ with .Form.FieldErrors.title }}
+        <span class="error">{{ . }}</span>
+      {{ end }}
+      <input
+        id="title-input"
+        name="title"
+        type="text"
+        value="{{ .Form.Title }}"
+      />
     </label>
+    <label for="content-input">
+      Text:
+      {{ with .Form.FieldErrors.content }}
+        <span class="error">{{ . }}</span>
+      {{ end }}
+      <textarea
+        id="content-input"
+        name="content"
+        value="{{ .Form.Content }}"
+      ></textarea>
+    </label>
+
     <fieldset class="radio-buttons">
-      <legend>Delete in:</legend>
+      <legend>
+        Delete in:
+        {{ with .Form.FieldErrors.expires }}
+          <span class="error">{{ . }}</span>
+        {{ end }}
+      </legend>
+
       <label for="expires">
-        <input type="radio" name="expires" value="365" checked /> One Year
+        <input
+          type="radio"
+          name="expires"
+          value="365"
+          {{ if (eq .Form.Expires 365) }}checked{{ end }}
+        />
+        One Year
       </label>
       <label for="expires">
-        <input type="radio" name="expires" value="7" /> One Week
+        <input
+          type="radio"
+          name="expires"
+          value="7"
+          {{ if (eq .Form.Expires 7) }}checked{{ end }}
+        />
+        One Week
       </label>
       <label for="expires">
-        <input type="radio" name="expires" value="1" /> One Day
+        <input
+          type="radio"
+          name="expires"
+          value="1"
+          {{ if (eq .Form.Expires 1) }}checked{{ end }}
+        />
+        One Day
       </label>
     </fieldset>
     <input type="submit" value="Publish snippet" />
