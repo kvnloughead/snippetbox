@@ -20,11 +20,7 @@
       {{ with .Form.FieldErrors.content }}
         <span class="error">{{ . }}</span>
       {{ end }}
-      <textarea
-        id="content-input"
-        name="content"
-        value="{{ .Form.Content }}"
-      ></textarea>
+      <textarea id="content-input" name="content">{{ .Form.Content }}</textarea>
     </label>
 
     <fieldset class="radio-buttons">
