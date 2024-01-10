@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/kvnloughead/snippetbox/internal/models"
+	"github.com/kvnloughead/snippetbox/internal/validator"
 )
 
 // A struct for passing data to our templateData struct. Contains all form
-// fields, plus a map for potential error messages.
+// fields, plus an embedded validator struct.
 type createSnippetForm struct {
-	Title       string
-	Content     string
-	Expires     int
-	FieldErrors map[string]string
+	Title   string
+	Content string
+	Expires int
+	validator.Validator
 }
 
 // Displays home page in response to GET /. If we were using http.ServeMux we
@@ -95,33 +94,20 @@ func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Create form struct containing field values and a map for potential errors.
 	form := createSnippetForm{
-		Title:       r.PostForm.Get("title"),
-		Content:     r.PostForm.Get("content"),
-		Expires:     expires,
-		FieldErrors: map[string]string{},
+		Title:   r.PostForm.Get("title"),
+		Content: r.PostForm.Get("content"),
+		Expires: expires,
 	}
 
-	// Validate title field. If invalid, an error is added to form.FieldErrors.
-	if strings.TrimSpace(form.Title) == "" {
-		form.FieldErrors["title"] = "This field can't be blank."
-	} else if utf8.RuneCountInString(form.Title) > 100 {
-		form.FieldErrors["title"] = "This field can't contain more than 100 characters."
-	}
-
-	// Validate content field. If invalid, an error is added to form.FieldErrors.
-	if strings.TrimSpace(form.Content) == "" {
-		form.FieldErrors["content"] = "This field can't be blank."
-	}
-
-	// Validate expires field. If invalid, an error is added to form.FieldErrors.
-	if form.Expires != 1 && form.Expires != 7 && form.Expires != 365 {
-		form.FieldErrors["expires"] = "This field must equal 1, 7, or 365."
-	}
+	// Validate all form fields.
+	form.CheckField(validator.NotBlank(form.Title), "title", "This field can't be blank.")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This can't contain more than 100 characters.")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field can't be blank.")
+	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7, or 365.")
 
 	// If there are any validation errors, render the page again with the errors.
-	if len(form.FieldErrors) > 0 {
+	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl", data)
