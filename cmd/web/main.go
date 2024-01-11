@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form/v4"
 	"github.com/kvnloughead/snippetbox/internal/models"
 
 	// Aliasing with a blank identifier because the driver isn't used explicitly.
@@ -19,6 +20,7 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -50,10 +52,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		logger:        logger,
 		snippets:      snippets,
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */

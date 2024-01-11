@@ -12,12 +12,12 @@ import (
 )
 
 // A struct for passing data to our templateData struct. Contains all form
-// fields, plus an embedded validator struct.
+// fields, plus an embedded validator struct. The tags instruct our application wide form decoder on how to map struct fields to markup.
 type createSnippetForm struct {
-	Title   string
-	Content string
-	Expires int
-	validator.Validator
+	Title               string     `form:"title"`
+	Content             string     `form:"content"`
+	Expires             int        `form:"expires"`
+	validator.Validator `form:"-"` // "-" tells formDecoder to ignore the field
 }
 
 // Displays home page in response to GET /. If we were using http.ServeMux we
@@ -87,17 +87,14 @@ func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Get the 'expires' value, converting it to an 'int'.
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	// Create an instance of our form struct and decode it with the formDecoder.
+	// This automatically parses the values passed as the second argument into the
+	// corresponding struct fields, making appropriate data conversions.
+	var form createSnippetForm
+	err = app.formDecoder.Decode(&form, r.PostForm)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	form := createSnippetForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	// Validate all form fields.
