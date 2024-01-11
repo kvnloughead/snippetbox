@@ -74,24 +74,17 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 Inserts a new record into the database. If successful, redirects the user to
 the corresponding page with a 303 status code.
 
-If one or more fields are invalid, the form is rendered again with a 422 status code, displaying the appropriate error messages.
+If one or more fields are invalid, the form is rendered again with a 422 status
+code, displaying the appropriate error messages.
 
 If we were using http.ServeMux, we would have to check the method in this handler.
 */
 func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request) {
-
-	// r.ParseForm() populates r.Form and r.PostForm and validates response body.
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	// Create an instance of our form struct and decode it with the formDecoder.
+	// Create an instance of our form struct and decode it with the app.decodePostForm.
 	// This automatically parses the values passed as the second argument into the
 	// corresponding struct fields, making appropriate data conversions.
 	var form createSnippetForm
-	err = app.formDecoder.Decode(&form, r.PostForm)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
