@@ -7,20 +7,25 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	"github.com/kvnloughead/snippetbox/internal/models"
 
 	// Aliasing with a blank identifier because the driver isn't used explicitly.
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // A struct containing application-wide dependencies.
 type application struct {
-	logger        *slog.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -52,13 +57,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize session manager, using our db as its store. We then add it to
+	// our dependency injector, and wrap our routes in its LoadAndSave middleware.
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	formDecoder := form.NewDecoder()
 
 	app := &application{
-		logger:        logger,
-		snippets:      snippets,
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		logger:         logger,
+		snippets:       snippets,
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
