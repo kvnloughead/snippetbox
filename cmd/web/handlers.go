@@ -111,6 +111,11 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Assign text to session data with the key "flash". The data is stored in the
+	// request's context. If there is no current session, a new one will be created.
+	// The flash is added to our template data via the newTemplateData function.
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+
 	// Redirect to page containing the new snippet.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
