@@ -62,6 +62,7 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true // only send cookies over HTTPS
 
 	formDecoder := form.NewDecoder()
 
@@ -85,8 +86,9 @@ func main() {
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
 	logger.Info("starting server", slog.String("addr", srv.Addr))
 
-	// Run the server. If an error occurs, log it and exit.
-	err = srv.ListenAndServe()
+	// Run the HTTPS server, passing it the self-signed TLS certificate and key.
+	// If an error occurs, log it and exit.
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)
 }
