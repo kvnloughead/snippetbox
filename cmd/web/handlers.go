@@ -13,7 +13,7 @@ import (
 
 // A struct for passing data to our templateData struct. Contains all form
 // fields, plus an embedded validator struct. The tags instruct our application wide form decoder on how to map struct fields to markup.
-type createSnippetForm struct {
+type snippetCreateForm struct {
 	Title               string     `form:"title"`
 	Content             string     `form:"content"`
 	Expires             int        `form:"expires"`
@@ -37,7 +37,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 // View page for the snippet with the given ID.
 // If there's no matching snippet a 404 NotFound response is sent.
-func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// Params are stored by httprouter in the request context.
 	params := httprouter.ParamsFromContext(r.Context())
 
@@ -64,9 +64,9 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "view.tmpl", templateData)
 }
 
-func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	templateData := app.newTemplateData(r)
-	templateData.Form = createSnippetForm{Expires: 365}
+	templateData.Form = snippetCreateForm{Expires: 365}
 	app.render(w, r, http.StatusOK, "create.tmpl", templateData)
 }
 
@@ -79,11 +79,11 @@ code, displaying the appropriate error messages.
 
 If we were using http.ServeMux, we would have to check the method in this handler.
 */
-func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Create an instance of our form struct and decode it with the app.decodePostForm.
 	// This automatically parses the values passed as the second argument into the
 	// corresponding struct fields, making appropriate data conversions.
-	var form createSnippetForm
+	var form snippetCreateForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
