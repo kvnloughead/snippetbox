@@ -29,7 +29,7 @@ type application struct {
 }
 
 func main() {
-	addr := flag.String("addr", "4000", "HTTP Network Address")
+	addr := flag.String("addr", ":4000", "HTTP Network Address")
 	dsn := flag.String(
 		"dsn",
 		"web:devpass@/snippetbox?parseTime=true",
@@ -73,13 +73,17 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	// Initial http server with address route handler.
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+	}
+
 	/* Info level log statement. Arguments after the first can either be variadic, key/value pairs, or attribute pairs created by slog.String, or a similar method. */
-	logger.Info("starting server", slog.String("addr", *addr))
+	logger.Info("starting server", slog.String("addr", srv.Addr))
 
-	mux := app.routes()
-	err = http.ListenAndServe(":"+*addr, mux)
-
-	// If http.ListenAndServe returns an error, log its message and exit.
+	// Run the server. If an error occurs, log it and exit.
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }
