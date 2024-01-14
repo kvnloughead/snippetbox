@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"html/template"
@@ -74,10 +75,20 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	// Struct containing non-default TLS settings.
+	tlsConfig := tls.Config{
+		// For performance, only use curves with assembly implementations.
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	// Initial http server with address route handler.
 	srv := &http.Server{
-		Addr:    *addr,
-		Handler: app.routes(),
+		Addr:         *addr,
+		Handler:      app.routes(),
+		TLSConfig:    &tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 
 		// Instruct our http server to log error using our structured logger.
 		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
