@@ -1,10 +1,15 @@
 package validator
 
 import (
+	"regexp"
 	"slices"
 	"strings"
 	"unicode/utf8"
 )
+
+// Email pattern recommended by W3C.
+// https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type Validator struct {
 	FieldErrors map[string]string
@@ -48,7 +53,17 @@ func NotBlank(s string) bool {
 
 // Returns true if a value contains no more than n characters.
 func MaxChars(s string, n int) bool {
-	return utf8.RuneCountInString(s) < n
+	return utf8.RuneCountInString(s) <= n
+}
+
+// Returns true if a value contains at least n characters.
+func MinChars(s string, n int) bool {
+	return utf8.RuneCountInString(s) >= n
+}
+
+// Returns true if the string matches the regex.
+func Matches(s string, rx *regexp.Regexp) bool {
+	return rx.MatchString(s)
 }
 
 // Returns true if the value matches one of the permittedValues.

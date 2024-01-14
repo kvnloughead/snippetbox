@@ -12,11 +12,22 @@ import (
 )
 
 // A struct for passing data to our templateData struct. Contains all form
-// fields, plus an embedded validator struct. The tags instruct our application wide form decoder on how to map struct fields to markup.
+// fields, plus an embedded validator struct. The tags instruct our application
+// wide form decoder on how to map struct fields to markup.
 type snippetCreateForm struct {
 	Title               string     `form:"title"`
 	Content             string     `form:"content"`
 	Expires             int        `form:"expires"`
+	validator.Validator `form:"-"` // "-" tells formDecoder to ignore the field
+}
+
+// A struct for passing data to our templateData struct. Contains all form
+// fields, plus an embedded validator struct. The tags instruct our application
+// wide form decoder on how to map struct fields to markup.
+type userSignupForm struct {
+	Name                string     `form:"name"`
+	Email               string     `form:"email"`
+	Password            string     `form:"password"`
 	validator.Validator `form:"-"` // "-" tells formDecoder to ignore the field
 }
 
@@ -65,11 +76,37 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display signup form")
+	templateData := app.newTemplateData(r)
+	templateData.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl", templateData)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "submit signup form")
+	var form userSignupForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field can't be blank.")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field can't be blank.")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field can't be blank.")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "Password must be at least 8 characters.")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "Invalid email.")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		return
+	}
+
+	err = app.users.Insert(form.Name, form.Email, form.Password)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +137,7 @@ code, displaying the appropriate error messages.
 If we were using http.ServeMux, we would have to check the method in this handler.
 */
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Create an instance of our form struct and decode it with the app.decodePostForm.
+	// Create an instance of our form struct and decode it with decodePostForm.
 	// This automatically parses the values passed as the second argument into the
 	// corresponding struct fields, making appropriate data conversions.
 	var form snippetCreateForm

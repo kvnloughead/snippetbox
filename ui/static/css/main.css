@@ -398,7 +398,7 @@ footer {
   text-align: center;
 }
 
-.create-snippet-form {
+.flex-column {
   display: flex;
   flex-direction: column;
 }

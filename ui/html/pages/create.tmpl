@@ -1,7 +1,7 @@
 {{ define "title" }}Create a New Snippet{{ end }}
 
 {{ define "main" }}
-  <form class="create-snippet-form" action="/snippet/create" method="POST">
+  <form class="flex-column" action="/snippet/create" method="POST">
     <label for="title-input">
       Title:
       <!-- If Form.FieldErrors.title is non-empty, it's value will be assigned to dot (.) and the error span will be rendered. -->
