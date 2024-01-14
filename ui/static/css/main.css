@@ -160,18 +160,14 @@ header {
   text-align: center;
 }
 
-header a {
-  color: #34495e;
-  text-decoration: none;
-}
-
 nav {
   border-bottom: 1px solid #e4e5e7;
-  padding-top: 17px;
-  padding-bottom: 15px;
+  padding: 17px 20px 15px;
   background: #f7f9fa;
   height: 60px;
   color: #6a6c6f;
+  display: flex;
+  justify-content: space-between;
 }
 
 nav a {
@@ -185,8 +181,6 @@ nav form {
 }
 
 nav div {
-  width: 50%;
-  float: left;
 }
 
 nav div:last-child {
