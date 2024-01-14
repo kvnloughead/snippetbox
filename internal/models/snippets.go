@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Type of data for an individual snippet.
+// Type representing a snippet document.
 type Snippet struct {
 	ID      int
 	Title   string
@@ -15,25 +15,24 @@ type Snippet struct {
 	Expires time.Time
 }
 
-// This wrapper for our sql.DB connection pool contains a number of helpful
-// methods for interacting with the DB.
+// A wrapper for our sql.DB connection pool.
+// Contains methods for interacting with the snippets collection.
 type SnippetModel struct {
 	DB *sql.DB
 }
 
-// Inserts a new snippet into the DB. Returns the ID of the inserted record or
-// an error.
+// Inserts a new snippet into the DB.
+// Returns the ID of the inserted record or an error.
 func (m *SnippetModel) Insert(
 	title string,
 	content string,
 	expires int) (int, error) {
 
-	// Query statements allow `?` for placeholders. Values for placeholders are
-	// supplied as arguments to sql.DB.Exec.
+	// The query to be executed. Query statements allow for '?' as placeholders.
 	query := `INSERT INTO snippets (title, content, created, expires)
 	VALUES(?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 
-	// sql.DB.Exec accepts the query statement, and variadic placeholder values.
+	// Execute query. Exec accepts variadic values for the query placeholders.
 	result, err := m.DB.Exec(query, title, content, expires)
 	if err != nil {
 		return 0, err
@@ -49,7 +48,7 @@ func (m *SnippetModel) Insert(
 }
 
 // Get a snippet by its ID.
-// If no matching snippet is found, a models.ErrNoRecord is returned.
+// If no matching snippet is found, a models.ErrNoRecord error is returned.
 func (m *SnippetModel) Get(id int) (Snippet, error) {
 	query := `SELECT id, title, content, created, expires FROM snippets
 	WHERE expires > UTC_TIMESTAMP() AND id = ?`
@@ -59,8 +58,8 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 	row := m.DB.QueryRow(query, id)
 
 	// Declare an empty snippet and populate it from the row returned by QueryRow.
-	// If multiple rows were found, the first row is used.
 	// If no rows were found, an sql.ErrNoRows error is returned.
+	// If multiple rows were found, the first row is used.
 	var s Snippet
 	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
