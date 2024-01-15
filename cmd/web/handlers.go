@@ -180,6 +180,8 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	// Add user ID to session data to indicate their logged in status.
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
+	app.sessionManager.Put(r.Context(), "flash", "Login successful.")
+
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
