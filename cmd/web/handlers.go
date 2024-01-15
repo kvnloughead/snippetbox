@@ -186,7 +186,20 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "logout user")
+	// When authentication state or privilege levels change, the session ID should
+	// be changed, via the RenewToken method.
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// "Logout" user by removing the authenticatedUserID, and flash success.
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Put(r.Context(), "flash", "You have succesfully logged out.")
+
+	// Redirect to home.
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
