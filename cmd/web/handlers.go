@@ -31,6 +31,15 @@ type userSignupForm struct {
 	validator.Validator `form:"-"` // "-" tells formDecoder to ignore the field
 }
 
+// A struct for passing data to our templateData struct. Contains all form
+// fields, plus an embedded validator struct. The tags instruct our application
+// wide form decoder on how to map struct fields to markup.
+type userLoginForm struct {
+	Email               string     `form:"email"`
+	Password            string     `form:"password"`
+	validator.Validator `form:"-"` // "-" tells formDecoder to ignore the field
+}
+
 // Displays home page in response to GET /. If we were using http.ServeMux we
 // would have to check the URL, but with httprouter.Router, "/" is exclusive.
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +119,6 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 			data.Form = form
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
 		} else {
-
 			app.serverError(w, r, err)
 		}
 		return
@@ -122,11 +130,57 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display login form")
+	templateData := app.newTemplateData(r)
+	templateData.Form = userLoginForm{}
+	app.render(w, r, http.StatusOK, "login.tmpl", templateData)
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "submit login form")
+	var form userLoginForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field can't be blank.")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field can't be blank.")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "Invalid email.")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl", data)
+		return
+	}
+
+	// Try to authenticate user. If the user's credentials are invalid, the
+	// login page is re-rendered with a non-field error.
+	id, err := app.users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or password is incorrect.")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnauthorized, "login.tmpl", data)
+		} else {
+			app.serverError(w, r, err)
+		}
+	}
+
+	// When authentication state or privilege levels change, the session ID should
+	// be changed, via the RenewToken method.
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// Add user ID to session data to indicate their logged in status.
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {

@@ -58,8 +58,39 @@ func (m *UserModel) Insert(
 	return nil
 }
 
+// Authenticate a user on login by comparing the plain text password to the
+// user's stored hashed password. If the email or password is incorrect, an
+// ErrInvalidCredentials error is returned.
 func (m *UserModel) Authenticate(email string, password string) (int, error) {
-	return 0, nil
+	var id int
+	var hashedPassword []byte
+
+	query := "SELECT id, hashed_password FROM users WHERE email = ?"
+
+	// QueryRow returns the first matching row. Scan copies the columns of the
+	// matched row into the specified locations. Scan returns ErrNoRows if no
+	// match was found.
+	err := m.DB.QueryRow(query, email).Scan(&id, &hashedPassword)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrInvalidCredentials
+		} else {
+			return 0, err
+		}
+	}
+
+	// Compare password to hash. If they don't match return ErrInvalidCredentials.
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return 0, ErrInvalidCredentials
+		} else {
+			return 0, err
+		}
+	}
+
+	// If password is correct, return the user's ID.
+	return id, nil
 }
 
 func (m *UserModel) Exists(id int) (bool, error) {
