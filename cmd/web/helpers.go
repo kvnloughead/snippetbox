@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"time"
 
@@ -34,11 +33,6 @@ func (app *application) serverError(
 	// Send http error response to client.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
-	// If in development, output stack trace in human readable form to stderr.
-	if os.Getenv("GO_ENV") != "production" {
-		debug.PrintStack()
-		app.logger.Error("IN DEV")
-	}
 }
 
 /*
