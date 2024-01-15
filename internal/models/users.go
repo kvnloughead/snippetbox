@@ -2,7 +2,12 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"strings"
 	"time"
+
+	"github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Type representing our user document.
@@ -27,6 +32,29 @@ func (m *UserModel) Insert(
 	email string,
 	password string,
 ) error {
+	// Generate hash from the password with bcrypt.
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	// The query to be executed. Query statements allow for '?' as placeholders.
+	query := `INSERT INTO users (name, email, hashed_password, created)
+	VALUES(?, ?, ?, UTC_TIMESTAMP())`
+
+	// Execute query. Exec accepts variadic values for the query placeholders.
+	_, err = m.DB.Exec(query, name, email, string(hash))
+	if err != nil {
+		// Handle duplicate email errors.
+		var mySQLError *mysql.MySQLError
+		if errors.As(err, &mySQLError) {
+			// If errors.As() is true, the error will be assigned to mySQLError.
+			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
+				return ErrDuplicateEmail
+			}
+		}
+		return err
+	}
 	return nil
 }
 
