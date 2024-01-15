@@ -21,11 +21,12 @@ var functions = template.FuncMap{
 // Go templates only allow a single data argument, so we create a struct to
 // store all necessary template data.
 type templateData struct {
-	CurrentYear int
-	Snippet     models.Snippet
-	Snippets    []models.Snippet
-	Form        any
-	Flash       string
+	CurrentYear     int
+	Snippet         models.Snippet
+	Snippets        []models.Snippet
+	Form            any
+	Flash           string
+	IsAuthenticated bool
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

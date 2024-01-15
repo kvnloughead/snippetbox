@@ -72,3 +72,19 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If user isn't logged in, redirect to login page.
+		if !app.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login", http.StatusUnauthorized)
+			app.sessionManager.Put(r.Context(), "flash", "Only authorized users can create snippets.")
+			return
+		}
+
+		// Prevent pages that require authorization from being cached.
+		w.Header().Add("Cache-Control", "no-store")
+
+		next.ServeHTTP(w, r)
+	})
+}

@@ -49,10 +49,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templateData := app.newTemplateData(r)
-	templateData.Snippets = snippets
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
-	app.render(w, r, http.StatusOK, "home.tmpl", templateData)
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
 // View page for the snippet with the given ID.
@@ -78,16 +78,16 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templateData := app.newTemplateData(r)
-	templateData.Snippet = snippet
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
 
-	app.render(w, r, http.StatusOK, "view.tmpl", templateData)
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	templateData := app.newTemplateData(r)
-	templateData.Form = userSignupForm{}
-	app.render(w, r, http.StatusOK, "signup.tmpl", templateData)
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
@@ -130,9 +130,9 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	templateData := app.newTemplateData(r)
-	templateData.Form = userLoginForm{}
-	app.render(w, r, http.StatusOK, "login.tmpl", templateData)
+	data := app.newTemplateData(r)
+	data.Form = userLoginForm{}
+	app.render(w, r, http.StatusOK, "login.tmpl", data)
 }
 
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
@@ -203,9 +203,9 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	templateData := app.newTemplateData(r)
-	templateData.Form = snippetCreateForm{Expires: 365}
-	app.render(w, r, http.StatusOK, "create.tmpl", templateData)
+	data := app.newTemplateData(r)
+	data.Form = snippetCreateForm{Expires: 365}
+	app.render(w, r, http.StatusOK, "create.tmpl", data)
 }
 
 /*

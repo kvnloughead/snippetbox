@@ -10,19 +10,19 @@ import (
 /*
 Returns a servemux that serves files from ./ui/static and contains the following routes:
 
-Unprotected routes:
+Static unprotected routes
+- GET  /static/*filepath    serve a static file
+
+Dynamic unprotected routes:
   - GET  /										display the home page
   - GET  /snippet/view/:id    display a specific snippet
-  - GET  /static/*filepath    serve a static file
-
-User authentication routes
   - GET  /user/signup					display the signup form
   - POST /user/signup					create a new user
   - GET  /user/login					display the login form
   - POST /user/login					authenticate and login a user
-  - POST /user/logout         logout the user
 
-Protected routes:
+Protected routes (only available to authenticated users):
+  - POST /user/logout         logout the user
   - GET  /snippet/create      display form to create snippets
   - POST /snippet/create      create a new snippet
 */
@@ -51,15 +51,18 @@ func (app *application) routes() http.Handler {
 	// router.HandlerFunc.
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
-
 	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.userSignup))
 	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.userSignupPost))
 	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.userLogin))
 	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.userLoginPost))
-	router.Handler(http.MethodPost, "/user/logout", dynamic.ThenFunc(app.userLogoutPost))
 
-	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
-	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
+	// Middleware chain for protected routes. Includes all middleware from dynamic
+	// chain, as well as app.requireAuthentication.
+	protected := dynamic.Append(app.requireAuthentication)
+
+	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
+	router.Handler(http.MethodGet, "/snippet/create", protected.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
 
 	// Initialize chain of standard pre-request middlewares.
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
