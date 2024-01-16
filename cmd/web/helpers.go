@@ -107,7 +107,13 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-// Returns true if the request is coming from an authenticated user.
+// Returns true if the request is coming from an authenticated user. Authentication is determined by the presence and value of an isAuthenticatedContextKey in the request context.
+//
+// False will be returned if the key doesn't exist, if it's value isn't boolean, or if its value is false.
 func (app *application) isAuthenticated(r *http.Request) bool {
-	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

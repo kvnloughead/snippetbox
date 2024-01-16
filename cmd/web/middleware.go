@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -109,4 +110,41 @@ func noSurf(next http.Handler) http.Handler {
 		Secure:   true,
 	})
 	return csrfHandler
+}
+
+// Middleware to check if a user has already been authenticated (i.e., whether
+// the session data contains an authenticatedUserID). If so, then
+// `isAuthenticatedContextKey: true` is added to the request context.
+//
+// If there is no authenticatedUserID, the next handler called with no
+// modification to the request.
+//
+// If there is an authenticatedUserID, but there is no corresponding user in
+// the DB, a 500 error is returned.
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Attempt to retrieve authenticated ID from the session.
+		// If no authenticated ID is found in the session, 0 will be returned.
+		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			next.ServeHTTP(w, r) // Carry on, without authentication.
+			return
+		}
+
+		// Make sure that a user with this ID exists in the DB.
+		exists, err := app.users.Exists(id)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		// If an authenticated ID is present and corresponds to an existing user
+		// indicate this in the request's context.
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

@@ -43,7 +43,7 @@ func (app *application) routes() http.Handler {
 		http.StripPrefix("/static", fileServer))
 
 	// Middleware chain for dynamic routes only (not static files).
-	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	// Dynamic routes are wrapped in our dynamic middleware. Note that since
 	// ThenFunc returns an http.Handler, we need to use router.Handler instead of
