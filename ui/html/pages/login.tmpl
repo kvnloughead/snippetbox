@@ -2,6 +2,7 @@
 
 {{ define "main" }}
   <form class="flex-column" action="/user/login" method="POST" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
     <!--
     Display all errors that aren't associated with a specific input field.
     This allows us to keep authentication related errors generic, for security.

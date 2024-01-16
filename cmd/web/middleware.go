@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
 )
 
 // Sets secure headers, per OWASP guidelines.
@@ -87,4 +89,24 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Middleware function that uses the nosurf package to prevent CSRF attacks.
+// This middleware should be used on all pages that contain a potentially
+// vulnerable route (non-GET/HEAD/OPTIONS/TRACE).
+//
+// For this application, a logout form is included in the nav partial template
+// which is included on all pages, so all non-static GET routes should be
+// protected with the middleware.
+//
+// Additionally, CSRF token has been added to our templateData struct and
+// embedded in all of our applications forms.
+func noSurf(next http.Handler) http.Handler {
+	csrfHandler := nosurf.New(next)
+	csrfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	})
+	return csrfHandler
 }

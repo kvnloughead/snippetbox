@@ -2,6 +2,7 @@
 
 {{ define "main" }}
   <form class="flex-column" action="/user/signup" method="POST" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}" />
     <label for="name-input">
       Name:
       {{ with .Form.FieldErrors.name }}
