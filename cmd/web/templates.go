@@ -10,8 +10,15 @@ import (
 	"github.com/kvnloughead/snippetbox/ui"
 )
 
+// Returns human readable date, formatted as 'DD Mon YYYY at hh:mm'.
+// If t is the zero time, an empty string is returned.
+// All non-empty times are converted to UTC.
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 15:04")
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 // template.FuncMap struct provides a string keyed map of template functions.
