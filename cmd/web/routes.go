@@ -13,10 +13,11 @@ import (
 Returns a servemux that serves files from ./ui/static and contains the following routes:
 
 Static unprotected routes
-- GET  /static/*filepath    serve a static file
+  - GET  /static/*filepath    serve a static file
 
 Dynamic unprotected routes:
   - GET  /										display the home page
+  - GET  /ping 							  responses with 200 OK
   - GET  /snippet/view/:id    display a specific snippet
   - GET  /user/signup					display the signup form
   - POST /user/signup					create a new user
@@ -39,12 +40,13 @@ func (app *application) routes() http.Handler {
 
 	// Serve static files out of embedded filesystem ui.Files.
 	fileServer := http.FileServer(http.FS(ui.Files))
-
 	router.Handler(
 		http.MethodGet,
 		"/static/*filepath",
 		fileServer,
 	)
+
+	router.HandlerFunc(http.MethodGet, "/ping", ping)
 
 	// Middleware chain for dynamic routes only (not static files).
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
