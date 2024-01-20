@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"html"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -14,6 +16,21 @@ import (
 	"github.com/go-playground/form/v4"
 	"github.com/kvnloughead/snippetbox/internal/models/mocks"
 )
+
+// Regex to capture CSRF from input on signup page.
+var csrfTokenRX = regexp.MustCompile(`<input type=["']hidden["'] name=["']csrf_token["'] value=["'](.+)["'] ?/?>`)
+
+func extractCSRFToken(t *testing.T, body string) string {
+	// FindStringSubmatch returns an array with the matched pattern at index 0 and any captured values at subsequent indexes.
+	matches := csrfTokenRX.FindStringSubmatch(body)
+	t.Logf(matches[0])
+	if len(matches) < 2 {
+		t.Fatal("no csrf found in body")
+	}
+
+	// It's necessary to unescape the token, because html/template library will automatically escape special characters that may be included in the token, such as '+'.
+	return html.UnescapeString((string(matches[1])))
+}
 
 // Returns an application struct with mocked dependencies for testing.
 // Currently, logger is the only included dependency, because some middlewares depend on it.
@@ -74,12 +91,21 @@ func (ts *testServer) get(t *testing.T, endpoint string) (int, http.Header, stri
 		t.Fatal(err)
 	}
 
-	defer response.Body.Close()
-	body, err := io.ReadAll(response.Body)
+	body := readBodyAsString(t, response)
+
+	return response.StatusCode, response.Header, body
+}
+
+// Reads the body of an HTTP response and returns it as a string
+// whitespace-trimmed string. Closes the response's body when returning.
+//
+// Errors occuring when reading the body are logged to test output (when they
+// are run with the -v flag).
+func readBodyAsString(t *testing.T, r *http.Response) string {
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
-	body = bytes.TrimSpace(body)
-
-	return response.StatusCode, response.Header, string(body)
+	return string(bytes.TrimSpace(body))
 }
