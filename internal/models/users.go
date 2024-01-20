@@ -25,13 +25,15 @@ type UserModel struct {
 	DB *sql.DB
 }
 
+type UserModelInterface interface {
+	Insert(name, email, password string) error
+	Authenticate(email string, password string) (int, error)
+	Exists(id int) (bool, error)
+}
+
 // Inserts a new user user the DB.
 // Returns the ID of the inserted record or an error.
-func (m *UserModel) Insert(
-	name string,
-	email string,
-	password string,
-) error {
+func (m *UserModel) Insert(name, email, password string) error {
 	// Generate hash from the password with bcrypt.
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {

@@ -21,6 +21,12 @@ type SnippetModel struct {
 	DB *sql.DB
 }
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (Snippet, error)
+	Latest() ([]Snippet, error)
+}
+
 // Inserts a new snippet into the DB.
 // Returns the ID of the inserted record or an error.
 func (m *SnippetModel) Insert(

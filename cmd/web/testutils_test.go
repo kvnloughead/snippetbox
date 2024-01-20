@@ -8,13 +8,35 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/alexedwards/scs/v2"
+	"github.com/go-playground/form/v4"
+	"github.com/kvnloughead/snippetbox/internal/models/mocks"
 )
 
 // Returns an application struct with mocked dependencies for testing.
 // Currently, logger is the only included dependency, because some middlewares depend on it.
 func newTestApplication(t *testing.T) *application {
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	formDecoder := form.NewDecoder()
+
+	// Same settings as production, but without the mysql store. Without a store, sessions will be stored in-memory.
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
+
 	return &application{
-		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		snippets:       &mocks.SnippetModel{},
+		users:          &mocks.UserModel{},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 }
 
