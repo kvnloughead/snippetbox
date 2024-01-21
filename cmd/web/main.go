@@ -28,6 +28,7 @@ type application struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
+	debug          bool
 }
 
 func main() {
@@ -36,6 +37,7 @@ func main() {
 		"dsn",
 		"web:devpass@/snippetbox?parseTime=true",
 		"MySQL data source name (aka 'connection string')")
+	debug := flag.Bool("debug", false, "Run in debug mode")
 	flag.Parse()
 
 	// Initialize structured logger to stdout with default settings.
@@ -74,6 +76,7 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
+		debug:          *debug,
 	}
 
 	// Struct containing non-default TLS settings.

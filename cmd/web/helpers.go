@@ -16,6 +16,8 @@ import (
 /*
 Writes an Error level log entry, including the request method and uri, and
 returns a 500 Internal Server Error.
+
+If run in debug mode, the full stack trace is sent to the client.
 */
 func (app *application) serverError(
 	w http.ResponseWriter,
@@ -25,11 +27,17 @@ func (app *application) serverError(
 	var (
 		method = r.Method
 		uri    = r.URL.RequestURI()
-		trace  = debug.Stack()
+		trace  = string(debug.Stack())
 	)
 
 	// Log error with stack trace.
-	app.logger.Error(err.Error(), "method", method, "uri", uri, "trace", trace)
+	app.logger.Error(err.Error(), "method", method, "uri", uri)
+
+	if app.debug {
+		body := fmt.Sprintf("%s\n%s", err, trace)
+		http.Error(w, body, http.StatusInternalServerError)
+		return
+	}
 
 	// Send http error response to client.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
