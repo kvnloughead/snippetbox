@@ -96,6 +96,8 @@ func (m *UserModel) Authenticate(email string, password string) (int, error) {
 }
 
 // Returns true if a user with the given ID is found in the database.
+//
+// In normal circumstances the error returned will always be nil, because the sql EXISTS statement always returns a row, even when there is a match.
 func (m *UserModel) Exists(id int) (bool, error) {
 	var exists bool
 

@@ -34,3 +34,12 @@ func StringContainsMatch(t *testing.T, actual string, expectedMatch *regexp.Rege
 		t.Errorf("got %q; expected to match %q", actual, expectedMatch)
 	}
 }
+
+// A test helper that calls t.Errorf() if actual is not nil.
+func IsNil(t *testing.T, actual error) {
+	t.Helper()
+
+	if actual != nil {
+		t.Errorf("got %q; expected: nil", actual)
+	}
+}

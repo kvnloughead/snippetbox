@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"regexp"
 	"testing"
 	"time"
@@ -23,7 +24,6 @@ var csrfTokenRX = regexp.MustCompile(`<input type=["']hidden["'] name=["']csrf_t
 func extractCSRFToken(t *testing.T, body string) string {
 	// FindStringSubmatch returns an array with the matched pattern at index 0 and any captured values at subsequent indexes.
 	matches := csrfTokenRX.FindStringSubmatch(body)
-	t.Logf(matches[0])
 	if len(matches) < 2 {
 		t.Fatal("no csrf found in body")
 	}
@@ -87,6 +87,18 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 // Creates a test client to send requests to our ts. And sends a GET request to the given endpoint. Returns the status code, headers and body of the response.
 func (ts *testServer) get(t *testing.T, endpoint string) (int, http.Header, string) {
 	response, err := ts.Client().Get(ts.URL + endpoint)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	body := readBodyAsString(t, response)
+
+	return response.StatusCode, response.Header, body
+}
+
+// Creates a test client to send requests to our ts. And sends a GET request to the given endpoint. Returns the status code, headers and body of the response.
+func (ts *testServer) post(t *testing.T, endpoint string, formVals url.Values) (int, http.Header, string) {
+	response, err := ts.Client().PostForm(ts.URL+endpoint, formVals)
 	if err != nil {
 		t.Fatal(err)
 	}
