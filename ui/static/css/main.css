@@ -406,3 +406,10 @@ footer {
 .radio-buttons {
   display: flex;
 }
+
+.about p {
+  margin: 0 0 12px;
+}
+.about ul {
+  margin-left: 24px;
+}

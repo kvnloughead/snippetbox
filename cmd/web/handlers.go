@@ -55,6 +55,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
+// Displays about page in response to GET /about.
+func (app *application) about(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "about.tmpl", data)
+}
+
 // View page for the snippet with the given ID.
 // If there's no matching snippet a 404 NotFound response is sent.
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
