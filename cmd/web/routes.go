@@ -29,6 +29,7 @@ Protected routes (only available to authenticated users):
   - POST /user/logout         logout the user
   - GET  /snippet/create      display form to create snippets
   - POST /snippet/create      create a new snippet
+  - GET  /account/view        view current user's account info
 */
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
@@ -70,6 +71,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
 	router.Handler(http.MethodGet, "/snippet/create", protected.ThenFunc(app.snippetCreate))
 	router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
+	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
 
 	// Initialize chain of standard pre-request middlewares.
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)

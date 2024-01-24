@@ -29,6 +29,7 @@ type UserModelInterface interface {
 	Insert(name, email, password string) error
 	Authenticate(email string, password string) (int, error)
 	Exists(id int) (bool, error)
+	Get(id int) (User, error)
 }
 
 // Inserts a new user user the DB.
@@ -105,4 +106,30 @@ func (m *UserModel) Exists(id int) (bool, error) {
 
 	err := m.DB.QueryRow(query, id).Scan(&exists)
 	return exists, err
+}
+
+// Get a user by its ID.
+// If no matching snippet is found, a models.ErrNoRecord error is returned.
+func (m *UserModel) Get(id int) (User, error) {
+	query := `SELECT name, email, created FROM users
+	WHERE id = ?`
+
+	// Executes a query statement that will return no more than one row.
+	// Accepts the query statement and a variadic list of placeholder values.
+	row := m.DB.QueryRow(query, id)
+
+	// Declare an empty user struct and populate it from the returned row.
+	// If no rows were found, an sql.ErrNoRows error is returned.
+	// If multiple rows were found, the first row is used.
+	var u User
+	err := row.Scan(&u.Name, &u.Email, &u.Created)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return User{}, ErrNoRecord
+		} else {
+			return User{}, err
+		}
+	}
+
+	return u, nil
 }
