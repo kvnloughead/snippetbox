@@ -78,9 +78,11 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 
 func (app *application) requireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		// If user isn't logged in, redirect to login page.
 		if !app.isAuthenticated(r) {
-			app.sessionManager.Put(r.Context(), "flash", "Only authorized users can create snippets.")
+			app.sessionManager.Put(r.Context(), "redirectToAfterLogin", r.URL.Path)
+			app.sessionManager.Put(r.Context(), "flash", "You must log in token access this resource.")
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 			return
 		}

@@ -188,6 +188,11 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(r.Context(), "flash", "Login successful.")
 
+	dest := app.sessionManager.PopString(r.Context(), "redirectAfterLogin")
+	if dest != "" {
+		http.Redirect(w, r, dest, http.StatusSeeOther)
+		return
+	}
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
