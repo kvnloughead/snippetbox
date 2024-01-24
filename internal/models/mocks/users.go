@@ -14,7 +14,7 @@ func (m *UserModel) Insert(name, email, password string) error {
 }
 
 func (m *UserModel) Authenticate(email string, password string) (int, error) {
-	if email == "testuser@mail.com" && password == "testpass" {
+	if email == "testuser@mail.com" && password == "pa$$word" {
 		return 1, nil
 	}
 	return 0, models.ErrInvalidCredentials

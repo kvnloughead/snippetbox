@@ -24,6 +24,43 @@ func TestPing(t *testing.T) {
 	assert.Equal(t, body, "OK")
 }
 
+func TestSnippetCreate(t *testing.T) {
+	app := newTestApplication(t)
+
+	// Create HTTPS server for testing on random port.
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	t.Run("Unauthenticated", func(t *testing.T) {
+		code, header, _ := ts.get(t, "/snippet/create")
+		assert.Equal(t, code, http.StatusSeeOther)
+		assert.Equal(t, header.Get("Location"), "/user/login")
+	})
+
+	t.Run("Authenticated", func(t *testing.T) {
+		formTag := regexp.MustCompile(`<form .* action="/snippet/create" method="POST">`)
+		// GET login page and extract CSRF token.
+		_, _, body := ts.get(t, "/user/login")
+		csrfToken := extractCSRFToken(t, body)
+
+		// Fill out login form.
+		form := url.Values{}
+		form.Add("email", "testuser@mail.com")
+		form.Add("password", "pa$$word")
+		form.Add("csrf_token", csrfToken)
+
+		// Send POST /user/login request, and check that the authenticated user is shown the create snippet form.
+		code, header, _ := ts.post(t, "/user/login", form)
+		assert.Equal(t, code, http.StatusSeeOther)
+		assert.Equal(t, header.Get("Location"), "/snippet/create")
+
+		// GET /snippet/create and verify response.
+		code, _, body = ts.get(t, "/snippet/create")
+		assert.Equal(t, code, http.StatusOK)
+		assert.StringContainsMatch(t, body, formTag)
+	})
+}
+
 func TestSnippetView(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routes())
