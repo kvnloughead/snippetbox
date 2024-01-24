@@ -81,8 +81,8 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 
 		// If user isn't logged in, redirect to login page.
 		if !app.isAuthenticated(r) {
-			app.sessionManager.Put(r.Context(), "redirectToAfterLogin", r.URL.Path)
-			app.sessionManager.Put(r.Context(), "flash", "You must log in token access this resource.")
+			app.sessionManager.Put(r.Context(), string(redirectAfterLogin), r.URL.Path)
+			app.sessionManager.Put(r.Context(), string(flash), "You must log in token access this resource.")
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 			return
 		}
@@ -127,7 +127,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Attempt to retrieve authenticated ID from the session.
 		// If no authenticated ID is found in the session, 0 will be returned.
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetInt(r.Context(), string(authenticatedUserID))
 		if id == 0 {
 			next.ServeHTTP(w, r) // Carry on, without authentication.
 			return

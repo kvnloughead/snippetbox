@@ -130,7 +130,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Your signup was successful, please log in.")
+	app.sessionManager.Put(r.Context(), string(flash), "Your signup was successful, please log in.")
 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
@@ -184,11 +184,11 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add user ID to session data to indicate their logged in status.
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.sessionManager.Put(r.Context(), string(authenticatedUserID), id)
 
-	app.sessionManager.Put(r.Context(), "flash", "Login successful.")
+	app.sessionManager.Put(r.Context(), string(flash), "Login successful.")
 
-	dest := app.sessionManager.PopString(r.Context(), "redirectAfterLogin")
+	dest := app.sessionManager.PopString(r.Context(), string(redirectAfterLogin))
 	if dest != "" {
 		http.Redirect(w, r, dest, http.StatusSeeOther)
 		return
@@ -206,8 +206,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// "Logout" user by removing the authenticatedUserID, and flash success.
-	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-	app.sessionManager.Put(r.Context(), "flash", "You have succesfully logged out.")
+	app.sessionManager.Remove(r.Context(), string(authenticatedUserID))
+	app.sessionManager.Put(r.Context(), string(flash), "You have succesfully logged out.")
 
 	// Redirect to home.
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -263,7 +263,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// Assign text to session data with the key "flash". The data is stored in the
 	// request's context. If there is no current session, a new one will be created.
 	// The flash is added to our template data via the newTemplateData function.
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+	app.sessionManager.Put(r.Context(), string(flash), "Snippet successfully created!")
 
 	// Redirect to page containing the new snippet.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
@@ -272,7 +272,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 // Displays account page in response to GET /account/view.
 func (app *application) accountView(w http.ResponseWriter, r *http.Request) {
 
-	id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	id := app.sessionManager.GetInt(r.Context(), string(authenticatedUserID))
 	user, err := app.users.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
