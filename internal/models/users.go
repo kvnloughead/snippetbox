@@ -26,39 +26,11 @@ type UserModel struct {
 }
 
 type UserModelInterface interface {
-	Insert(name, email, password string) error
 	Authenticate(email string, password string) (int, error)
-	Exists(id int) (bool, error)
 	Get(id int) (User, error)
-}
-
-// Inserts a new user user the DB.
-// Returns the ID of the inserted record or an error.
-func (m *UserModel) Insert(name, email, password string) error {
-	// Generate hash from the password with bcrypt.
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
-	if err != nil {
-		return err
-	}
-
-	// The query to be executed. Query statements allow for '?' as placeholders.
-	query := `INSERT INTO users (name, email, hashed_password, created)
-	VALUES(?, ?, ?, UTC_TIMESTAMP())`
-
-	// Execute query. Exec accepts variadic values for the query placeholders.
-	_, err = m.DB.Exec(query, name, email, string(hash))
-	if err != nil {
-		// Handle duplicate email errors.
-		var mySQLError *mysql.MySQLError
-		if errors.As(err, &mySQLError) {
-			// If errors.As() is true, the error will be assigned to mySQLError.
-			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
-				return ErrDuplicateEmail
-			}
-		}
-		return err
-	}
-	return nil
+	Exists(id int) (bool, error)
+	Insert(name, email, password string) error
+	PasswordUpdate(id int, password string) error
 }
 
 // Authenticate a user on login by comparing the plain text password to the
@@ -96,18 +68,6 @@ func (m *UserModel) Authenticate(email string, password string) (int, error) {
 	return id, nil
 }
 
-// Returns true if a user with the given ID is found in the database.
-//
-// In normal circumstances the error returned will always be nil, because the sql EXISTS statement always returns a row, even when there is a match.
-func (m *UserModel) Exists(id int) (bool, error) {
-	var exists bool
-
-	query := "SELECT EXISTS(SELECT true FROM users WHERE id = ?)"
-
-	err := m.DB.QueryRow(query, id).Scan(&exists)
-	return exists, err
-}
-
 // Get a user by its ID.
 // If no matching snippet is found, a models.ErrNoRecord error is returned.
 func (m *UserModel) Get(id int) (User, error) {
@@ -132,4 +92,59 @@ func (m *UserModel) Get(id int) (User, error) {
 	}
 
 	return u, nil
+}
+
+// Returns true if a user with the given ID is found in the database.
+//
+// In normal circumstances the error returned will always be nil, because the sql EXISTS statement always returns a row, even when there is a match.
+func (m *UserModel) Exists(id int) (bool, error) {
+	var exists bool
+
+	query := "SELECT EXISTS(SELECT true FROM users WHERE id = ?)"
+
+	err := m.DB.QueryRow(query, id).Scan(&exists)
+	return exists, err
+}
+
+// Inserts a new user user the DB.
+// Returns the ID of the inserted record or an error.
+func (m *UserModel) Insert(name, email, password string) error {
+	// Generate hash from the password with bcrypt.
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	// The query to be executed. Query statements allow for '?' as placeholders.
+	query := `INSERT INTO users (name, email, hashed_password, created)
+	VALUES(?, ?, ?, UTC_TIMESTAMP())`
+
+	// Execute query. Exec accepts variadic values for the query placeholders.
+	_, err = m.DB.Exec(query, name, email, string(hash))
+	if err != nil {
+		// Handle duplicate email errors.
+		var mySQLError *mysql.MySQLError
+		if errors.As(err, &mySQLError) {
+			// If errors.As() is true, the error will be assigned to mySQLError.
+			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
+				return ErrDuplicateEmail
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+// Generates a hash from the supplied password and updates it in the DB.
+// The password is not validated, so make sure that it is valid before calling.
+func (m *UserModel) PasswordUpdate(id int, password string) error {
+	// Generate hash from the password with bcrypt.
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := `UPDATE users SET hashed_password = ? WHERE id = ?`
+	m.DB.Exec(stmt, hash, id)
+	return nil
 }

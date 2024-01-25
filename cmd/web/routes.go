@@ -16,20 +16,22 @@ Static unprotected routes
   - GET  /static/*filepath    serve a static file
 
 Dynamic unprotected routes:
-  - GET  /										display the home page
-  - GET  /about								display the about page
-  - GET  /ping 							  responses with 200 OK
-  - GET  /snippet/view/:id    display a specific snippet
-  - GET  /user/signup					display the signup form
-  - POST /user/signup					create a new user
-  - GET  /user/login					display the login form
-  - POST /user/login					authenticate and login a user
+  - GET  /														display the home page
+  - GET  /about												display the about page
+  - GET  /ping 							  				responses with 200 OK
+  - GET  /snippet/view/:id    				display a specific snippet
+  - GET  /user/signup									display the signup form
+  - POST /user/signup									create a new user
+  - GET  /user/login									display the login form
+  - POST /user/login									authenticate and login a user
 
 Protected routes (only available to authenticated users):
-  - POST /user/logout         logout the user
-  - GET  /snippet/create      display form to create snippets
-  - POST /snippet/create      create a new snippet
-  - GET  /account/view        view current user's account info
+  - POST /user/logout         				logout the user
+  - GET  /snippet/create   				    display form to create snippets
+  - POST /snippet/create      				create a new snippet
+  - GET  /account/view        				view current user's account info
+  - GET  /account/password/update     view form to change password
+  - POST /account/passwprd/update     change password
 */
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
@@ -72,6 +74,8 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/snippet/create", protected.ThenFunc(app.snippetCreate))
 	router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
 	router.Handler(http.MethodGet, "/account/view", protected.ThenFunc(app.accountView))
+	router.Handler(http.MethodGet, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdate))
+	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
 
 	// Initialize chain of standard pre-request middlewares.
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)

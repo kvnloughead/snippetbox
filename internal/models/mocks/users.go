@@ -46,3 +46,7 @@ func (m *UserModel) Get(id int) (models.User, error) {
 		return models.User{}, models.ErrNoRecord
 	}
 }
+
+func (m *UserModel) PasswordUpdate(id int, password string) error {
+	return nil
+}
