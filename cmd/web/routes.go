@@ -31,7 +31,7 @@ Protected routes (only available to authenticated users):
   - POST /snippet/create      				create a new snippet
   - GET  /account/view        				view current user's account info
   - GET  /account/password/update     view form to change password
-  - POST /account/passwprd/update     change password
+  - POST /account/password/update     change password
 */
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
