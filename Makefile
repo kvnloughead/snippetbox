@@ -1,13 +1,12 @@
 run-dev:
-	export GO_ENV=development
-	go run ./cmd/web
+	export GO_ENV=development && export PORT=4001 && air
 
 run-prod:
 	export GO_ENV=production
 	go run ./cmd/web
 
 build:
-	go build -o snippetbox-compiled
+	go build -o ./tmp/myserver ./cmd/web
 
 test:
 	go test ./...
