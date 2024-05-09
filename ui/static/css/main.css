@@ -276,10 +276,10 @@ form label {
   display: block;
 }
 
-.error + textarea,
-.error + input {
-  border-color: #c0392b !important;
-  border-width: 2px !important;
+form .error + textarea,
+form .error + input {
+  border-color: #c0392b;
+  border-width: 2px;
 }
 
 textarea {
